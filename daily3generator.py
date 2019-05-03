@@ -12,7 +12,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lookback', type=int, nargs=1, default=[10], help='Number of previous draws to calculate from. Default: 10')
     parser.add_argument('--tothotnumbers', type=int, nargs=1, default=[4], help='Number of "hot numbers" to use in generating playable numbers. Max: 10 Default: 4')
-    parser.add_argument('--usedate', type=str, nargs=1, default=['today'], help='Date to lookback from in format "%b %d, %Y". Default: today')
+    parser.add_argument('--usedate', type=str, nargs=1, default=['today'], help='Date to lookback from in format "%%b %%d, %%Y". Default: today')
     parser.add_argument('--middaydraw', action='store_true', default=False, help='Use midday draw. Default: False')
     parser.add_argument('--includetriples', action='store_true', default=False, help='Include triples in playable numbers. Default: False')
     parser.add_argument('--showhistogram', action='store_true', default=False, help='Print the frequency histogram. Default: False')
