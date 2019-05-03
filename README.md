@@ -23,9 +23,6 @@ optional arguments:
 
 ## Exampe output
 ```
-Fetching...
-
-```
 > python3 daily3generator.py --middaydraw --showhistogram --usedate "Sep 24, 2018"
 
 Lookback-size    : 10
@@ -62,4 +59,5 @@ Numbers to play (4,6,7,8):
 14. 688
 15. 778
 16. 788
+```
 
