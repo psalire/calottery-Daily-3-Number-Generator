@@ -12,22 +12,32 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lookback', type=int, nargs=1, default=[10], help='Number of previous draws to calculate from. Default: 10')
     parser.add_argument('--tothotnumbers', type=int, nargs=1, default=[4], help='Number of "hot numbers" to use in generating playable numbers. Max: 10 Default: 4')
-    parser.add_argument('--usedate', type=str, nargs=1, default=['today'], help='Date to lookback from in format "%%b %%d, %%Y". Default: today')
+    parser.add_argument('--usedate', type=str, nargs=1, default=[None], help='Date to lookback from in format "%%b %%d, %%Y". Default: today\'s date')
+    parser.add_argument('--uselocal', action='store_true', default=False, help='Use local daily3results.txt file from --savefile, instead of fetch. Default: False')
     parser.add_argument('--middaydraw', action='store_true', default=False, help='Use midday draw. Default: False')
     parser.add_argument('--includetriples', action='store_true', default=False, help='Include triples in playable numbers. Default: False')
     parser.add_argument('--showhistogram', action='store_true', default=False, help='Print the frequency histogram. Default: False')
+    parser.add_argument('--savefile', action='store_true', default=False, help='Save the calottery .txt file as daily3results.txt. Default: False')
     return parser.parse_args()
 
-def get_daily3_file():
-    print('Fetching...')
-    page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
-    print('\033[F\033[K', end='')
-    # Fix line endings
-    return str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
+def get_daily3_file(save_file, use_local):
+    if use_local == False:
+        print('Fetching...')
+        page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
+        print('\033[F\033[K', end='')
+        # Fix line endings
+        content = str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
+    else:
+        content = open('daily3results.txt', 'r').read()
+    if save_file == True:
+        out_file = open('daily3results.txt', 'wb')
+        out_file.write(content.encode())
+        out_file.close()
+    return content
 
 def get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw):
     date_line_num = 0
-    if date_to_use == 'today':
+    if date_to_use == None:
         date_to_use = LATEST_DRAW_DATE
     elif date_to_use != LATEST_DRAW_DATE:
         diff = LATEST_DRAW_DATE - date_to_use
@@ -80,7 +90,7 @@ def main():
     # Get args
     args = get_args()
     date_to_use = args.usedate[0]
-    if date_to_use != 'today':
+    if date_to_use != None:
         try:
             date_to_use = datetime.strptime(date_to_use, '%b %d, %Y')
         except ValueError:
@@ -91,12 +101,14 @@ def main():
     if tot_hotnumbers > 10:
         print('Error: must be 0 < tot_hotnumbers <= 10')
         sys.exit()
+    use_local = args.uselocal
     show_histogram = args.showhistogram
     use_midday_draw = args.middaydraw
     include_triples = args.includetriples
+    save_file = args.savefile
 
     # Get txt file
-    lotto_file = get_daily3_file()
+    lotto_file = get_daily3_file(save_file, use_local)
     lines = lotto_file.split('\n')[5:]
 
     # Get latest draw date
