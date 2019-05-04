@@ -50,6 +50,8 @@ def get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw):
         sys.exit()
     if use_midday_draw == True and lines[date_line_num][15:27] == lines[date_line_num+1][15:27]:
         date_line_num += 1
+    elif use_midday_draw == False and date_line_num != 0 and lines[date_line_num][15:27] == lines[date_line_num-1][15:27]:
+        date_line_num -= 1
     return date_to_use, date_line_num
 
 def get_hot_numbers(lines, tot_hotnumbers, print_histogram):
