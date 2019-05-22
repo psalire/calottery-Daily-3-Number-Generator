@@ -13,18 +13,18 @@ def get_args():
     parser.add_argument('--lookback', type=int, nargs=1, default=[10], help='Number of previous draws to calculate from. Default: 10')
     parser.add_argument('--tothotnumbers', type=int, nargs=1, default=[4], help='Number of "hot numbers" to use in generating playable numbers. Max: 10 Default: 4')
     parser.add_argument('--usedate', type=str, nargs=1, default=[None], help='Date to lookback from in format "%%b %%d, %%Y". Default: today\'s date')
-    parser.add_argument('--uselocal', action='store_true', default=False, help='Use local daily3results.txt file from --savefile, instead of fetch. Default: False')
     parser.add_argument('--middaydraw', action='store_true', default=False, help='Use midday draw. Default: False')
     parser.add_argument('--includetriples', action='store_true', default=False, help='Include triples in playable numbers. Default: False')
     parser.add_argument('--showhistogram', action='store_true', default=False, help='Print the frequency histogram. Default: False')
     parser.add_argument('--savefile', action='store_true', default=False, help='Save the calottery .txt file as daily3results.txt. Default: False')
+    parser.add_argument('--uselocal', action='store_true', default=False, help='Use local daily3results.txt file from --savefile, instead of fetch. Default: False')
     return parser.parse_args()
 
 def get_daily3_file(save_file, use_local):
     if use_local == False:
         print('Fetching...')
         page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
-        print('\033[F\033[K', end='')
+        print('\033[A\033[K', end='')
         # Fix line endings
         content = str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
     else:
