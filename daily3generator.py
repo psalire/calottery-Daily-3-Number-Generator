@@ -3,8 +3,9 @@ import itertools
 import re
 import requests
 import sys
+import tkinter as tk
 from datetime import datetime, timedelta
-from math import ceil
+from multiprocessing import Event
 
 LATEST_DRAW_DATE = None
 
@@ -86,11 +87,7 @@ def print_playable_sets(hot_numbers, include_triples):
             print('{:>2}. {}'.format(i, ''.join(set)))
             i += 1
 
-########### MAIN ###########
-def main():
-    global LATEST_DRAW_DATE
-    # Get args
-    args = get_args()
+def daily3(args):
     date_to_use = args.usedate[0]
     if date_to_use != None:
         try:
@@ -114,6 +111,7 @@ def main():
     lines = lotto_file.split('\n')[5:]
 
     # Get latest draw date
+    global LATEST_DRAW_DATE
     LATEST_DRAW_DATE = datetime.strptime(lines[0][15:27], '%b %d, %Y')
     print('')
 
@@ -131,6 +129,36 @@ def main():
         show_histogram
     )
     print_playable_sets(hot_numbers, include_triples)
+
+
+########### MAIN ###########
+def main():
+    # Get args
+    args = get_args()
+    date_to_use = args.usedate[0]
+    if date_to_use != None:
+        try:
+            date_to_use = datetime.strptime(date_to_use, '%b %d, %Y')
+        except ValueError:
+            print('Error: Date must be format "%b %d, %Y"')
+            sys.exit()
+    lookback_size = args.lookback[0]
+    tot_hotnumbers = args.tothotnumbers[0]
+    if tot_hotnumbers > 10:
+        print('Error: must be 0 < tot_hotnumbers <= 10')
+        sys.exit()
+    use_local = args.uselocal
+    show_histogram = args.showhistogram
+    use_midday_draw = args.middaydraw
+    include_triples = args.includetriples
+    save_file = args.savefile
+
+    # Start GUI
+    start_signal = Event()
+    gui = tk.Tk()
+    start_button = tk.Button(gui, text='Start', width=25, command=lambda: daily3(args))
+    start_button.pack()
+    gui.mainloop()
 
 if __name__ == "__main__":
     main()
