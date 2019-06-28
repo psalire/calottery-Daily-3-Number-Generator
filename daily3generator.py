@@ -5,7 +5,6 @@ import requests
 import sys
 import tkinter as tk
 from datetime import datetime, timedelta
-from multiprocessing import Event
 
 LATEST_DRAW_DATE = None
 
@@ -135,29 +134,79 @@ def daily3(args):
 def main():
     # Get args
     args = get_args()
-    date_to_use = args.usedate[0]
-    if date_to_use != None:
-        try:
-            date_to_use = datetime.strptime(date_to_use, '%b %d, %Y')
-        except ValueError:
-            print('Error: Date must be format "%b %d, %Y"')
-            sys.exit()
-    lookback_size = args.lookback[0]
-    tot_hotnumbers = args.tothotnumbers[0]
-    if tot_hotnumbers > 10:
-        print('Error: must be 0 < tot_hotnumbers <= 10')
-        sys.exit()
-    use_local = args.uselocal
-    show_histogram = args.showhistogram
-    use_midday_draw = args.middaydraw
-    include_triples = args.includetriples
-    save_file = args.savefile
+    # date_to_use = args.usedate[0]
+    # if date_to_use != None:
+        # try:
+            # date_to_use = datetime.strptime(date_to_use, '%b %d, %Y')
+        # except ValueError:
+            # print('Error: Date must be format "%b %d, %Y"')
+            # sys.exit()
+    # lookback_size = args.lookback[0]
+    # tot_hotnumbers = args.tothotnumbers[0]
+    # if tot_hotnumbers > 10:
+        # print('Error: must be 0 < tot_hotnumbers <= 10')
+        # sys.exit()
+    # use_local = args.uselocal
+    # show_histogram = args.showhistogram
+    # use_midday_draw = args.middaydraw
+    # include_triples = args.includetriples
+    # save_file = args.savefile
 
     # Start GUI
-    start_signal = Event()
     gui = tk.Tk()
-    start_button = tk.Button(gui, text='Start', width=25, command=lambda: daily3(args))
-    start_button.pack()
+    gui.grid_columnconfigure((0, 1, 2), weight=1)
+    gui.title('CA Daily 3 Generator')
+    ## Date to use
+    month_frame = tk.Frame(gui)
+    month_frame.grid_columnconfigure((0, 1), weight=1)
+    month_frame.grid(row=0, column=0)
+    month = tk.StringVar()
+    month.set(datetime.today().strftime('%b'))
+    months = tk.Listbox(month_frame)
+    for m in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']:
+        months.insert(tk.END, m)
+    months_scroll = tk.Scrollbar(month_frame)
+    months_scroll.configure(command=months.yview, orient=tk.VERTICAL)
+    months.grid(row=0, column=0)
+    months_scroll.grid(row=0, column=1, sticky='NS')
+
+    day_frame = tk.Frame(gui)
+    day_frame.grid_columnconfigure((0, 1), weight=1)
+    day_frame.grid(row=0, column=1)
+    day = tk.StringVar()
+    day.set(datetime.today().strftime('%d'))
+    numerical_month  = int(datetime.today().strftime('%m'))
+    if numerical_month in [1,3,5,7,8,10,12]:
+        total_days = range(1,32)
+    elif numerical_month != 2:
+        total_days = range(1,31)
+    else:
+        total_days = range(1,29)
+    days = tk.Listbox(day_frame)
+    for d in total_days:
+        days.insert(tk.END, d)
+    days_scroll = tk.Scrollbar(day_frame)
+    days_scroll.configure(command=days.yview, orient=tk.VERTICAL)
+    days.grid(row=0, column=0)
+    days_scroll.grid(row=0, column=1, sticky='NS')
+
+    year_frame = tk.Frame(gui)
+    year_frame.grid_columnconfigure((0, 1), weight=1)
+    year_frame.grid(row=0, column=2)
+    year = tk.StringVar()
+    current_year = datetime.today().strftime('%Y')
+    year.set(current_year)
+    years = tk.Listbox(year_frame)
+    for y in range(1992, int(current_year)+1):
+        years.insert(0, y)
+    years_scroll = tk.Scrollbar(year_frame)
+    years_scroll.configure(command=years.yview, orient=tk.VERTICAL)
+    years.grid(row=0, column=0)
+    years_scroll.grid(row=0, column=1, sticky='NS')
+
+    ## Start button
+    start_button = tk.Button(gui, text='Start', width=15, command=lambda:daily3(args))
+    start_button.grid(row=2)
     gui.mainloop()
 
 if __name__ == "__main__":
