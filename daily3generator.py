@@ -42,8 +42,8 @@ def get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw):
     elif date_to_use != LATEST_DRAW_DATE:
         diff = LATEST_DRAW_DATE - date_to_use
         if diff.days < 0:
-            print('Error: Date ({}) is in the future. Exiting...'.format(date_to_use.strftime('%b %d, %Y')))
-            sys.exit()
+            print('Error: Date ({}) is in the future.'.format(date_to_use.strftime('%b %d, %Y')))
+            return None, None
         date_line_num = diff.days * 2
     if date_line_num + lookback_size > len(lines):
         print('Error: Date ({}) + lookback_size ({}) is out of range. Exiting...'.format(date_to_use.strftime('%b %d, %Y'), lookback_size))
@@ -86,7 +86,7 @@ def print_playable_sets(hot_numbers, include_triples):
             print('{:>2}. {}'.format(i, ''.join(set)))
             i += 1
 
-def daily3(args, m, d, y):
+def daily3(args, m, d, y, use_midday_draw):
     print('{} {} {}'.format(m,d,y))
     # date_to_use = args.usedate[0]
     date_to_use = '{} {}, {}'.format(m, d, y)
@@ -94,8 +94,8 @@ def daily3(args, m, d, y):
     try:
         date_to_use = datetime.strptime(date_to_use, '%b %d, %Y')
     except ValueError:
-        print('Error: Date must be format "%b %d, %Y"')
-        sys.exit()
+        print('Error: Invalid date')
+        return
     lookback_size = args.lookback[0]
     tot_hotnumbers = args.tothotnumbers[0]
     if tot_hotnumbers > 10:
@@ -103,7 +103,7 @@ def daily3(args, m, d, y):
         sys.exit()
     use_local = args.uselocal
     show_histogram = args.showhistogram
-    use_midday_draw = args.middaydraw
+    # use_midday_draw = args.middaydraw
     include_triples = args.includetriples
     save_file = args.savefile
 
@@ -118,6 +118,8 @@ def daily3(args, m, d, y):
 
     # Get line number by date
     date_to_use, date_line_num = get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw)
+    if date_to_use == None:
+        return
 
     print('{:<17}: '.format('Lookback-size') + str(lookback_size))
     print('{:<17}: '.format('Include Triples') + str(include_triples))
@@ -131,33 +133,67 @@ def daily3(args, m, d, y):
     )
     print_playable_sets(hot_numbers, include_triples)
 
-def create_gui_frame(gui, r, c,):
+def create_gui_frame(gui, r, c, columnspan=None):
     frame = tk.Frame(gui)
     frame.grid_columnconfigure((0, 1), weight=1)
     frame.grid_rowconfigure((0, 1), weight=1)
-    frame.grid(row=r, column=c)
+    if columnspan != None:
+        frame.grid(row=r, column=c, columnspan=4)
+    else:
+        frame.grid(row=r, column=c)
     return frame
-    
+
 def create_gui_scrollbar(frame, reference):
     scrollbar = tk.Scrollbar(frame)
     scrollbar.configure(command=reference.yview, orient=tk.VERTICAL)
     scrollbar.grid(row=1, column=1, sticky='NS')
     return scrollbar
 
-def update_month(event, m, d, y, date):
+def populate_days_listbox(month, days_listbox):
+    if month in ['Jan','Mar','May','Jul','Aug','Oct','Dec']:
+        total_days = range(1,32)
+    elif month != 'Feb':
+        total_days = range(1,31)
+    else:
+        total_days = range(1,30)
+    days_listbox.delete(0, tk.END)
+    for d in total_days:
+        days_listbox.insert(tk.END, d)
+
+def update_month(event, m, d, y, u, date, days):
     w = event.widget
     m.set(w.get(w.curselection()))
-    date.set('Using Date: {} {}, {}'.format(m.get(), d.get(), y.get()))
-    
-def update_day(event, m, d, y, date):
+    populate_days_listbox(m.get(), days)
+    if u.get() == True:
+        tod = 'Midday'
+    else:
+        tod = 'Evening'
+    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+
+def update_day(event, m, d, y, u, date):
     w = event.widget
     d.set(w.get(w.curselection()))
-    date.set('Using Date: {} {}, {}'.format(m.get(), d.get(), y.get()))
+    if u.get() == True:
+        tod = 'Midday'
+    else:
+        tod = 'Evening'
+    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
 
-def update_year(event, m, d, y, date):
+def update_year(event, m, d, y, u, date):
     w = event.widget
     y.set(w.get(w.curselection()))
-    date.set('Using Date: {} {}, {}'.format(m.get(), d.get(), y.get()))
+    if u.get() == True:
+        tod = 'Midday'
+    else:
+        tod = 'Evening'
+    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+
+def update_tod(m, d, y, u, date):
+    if u.get() == True:
+        tod = 'Midday'
+    else:
+        tod = 'Evening'
+    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
 
 ########### MAIN ###########
 def main():
@@ -167,24 +203,27 @@ def main():
     # Create GUI
     gui = tk.Tk()
     gui.grid_columnconfigure((0, 1, 2, 3), weight=1)
-    gui.grid_rowconfigure((0, 1, 2), weight=1)
+    gui.grid_rowconfigure((0, 1, 2, 3), weight=1)
     gui.title('CA Daily 3 Generator')
     ## StringVars for date to use
     month = tk.StringVar()
     day = tk.StringVar()
     year = tk.StringVar()
+    use_midday = tk.BooleanVar()
     ## Initialize to today's date
     month.set(datetime.today().strftime('%b'))
     day.set(datetime.today().strftime('%d'))
     year.set(datetime.today().strftime('%Y'))
+    use_midday.set(False)
     ### Frames for date selection
     month_frame = create_gui_frame(gui, 0, 0)
     day_frame = create_gui_frame(gui, 0, 1)
     year_frame = create_gui_frame(gui, 0, 2)
+    tod_frame = create_gui_frame(gui, 2, 0, columnspan=4)
     ### Listboxes for date selection
-    months = tk.Listbox(month_frame, width=5, height=5)
-    days = tk.Listbox(day_frame, width=5, height=5)
-    years = tk.Listbox(year_frame, width=5, height=5)
+    months = tk.Listbox(month_frame, width=5)
+    days = tk.Listbox(day_frame, width=5)
+    years = tk.Listbox(year_frame, width=5)
     ### Fill Month listbox
     for m in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']:
         months.insert(tk.END, m)
@@ -192,15 +231,7 @@ def main():
     months.grid(row=1, column=0)
     create_gui_scrollbar(month_frame, months)
     ### Fill Day listbox
-    numerical_month  = int(datetime.today().strftime('%m'))
-    if numerical_month in [1,3,5,7,8,10,12]:
-        total_days = range(1,32)
-    elif numerical_month != 2:
-        total_days = range(1,31)
-    else:
-        total_days = range(1,29)
-    for d in total_days:
-        days.insert(tk.END, d)
+    populate_days_listbox(datetime.today().strftime('%b'), days)
     tk.Label(day_frame, text='Day: ').grid(row=0, column=0, sticky='W')
     days.grid(row=1, column=0)
     create_gui_scrollbar(day_frame, days)
@@ -210,16 +241,26 @@ def main():
     tk.Label(year_frame, text='Year: ').grid(row=0, column=0, sticky='W')
     years.grid(row=1, column=0)
     create_gui_scrollbar(year_frame, years)
+    ### Radio buttons for time of day selection
+    tk.Label(tod_frame, text='Draw Time:').grid(row=0, column=0)
+    tk.Radiobutton(tod_frame, text='Evening', variable=use_midday,
+        value=False, command=lambda: update_tod(month, day, year, use_midday, date)).grid(row=0, column=1)
+    tk.Radiobutton(tod_frame, text='Midday', variable=use_midday,
+        value=True, command=lambda: update_tod(month, day, year, use_midday, date)).grid(row=0, column=2)
     ## Display selected date
     date = tk.StringVar()
-    date.set('Using Date: {} {}, {}'.format(month.get(), day.get(), year.get()))
-    tk.Label(gui, textvariable=date).grid(row=2, columnspan=2, sticky='W')
-    months.bind('<ButtonRelease-1>', lambda e: update_month(e, month, day, year, date))
-    days.bind('<ButtonRelease-1>', lambda e: update_day(e, month, day, year, date))
-    years.bind('<ButtonRelease-1>', lambda e: update_year(e, month, day, year, date))
+    if use_midday.get() == True:
+        tod = 'Midday'
+    else:
+        tod = 'Evening'
+    date.set('Using Draw: {} {}, {} ({})'.format(month.get(), day.get(), year.get(), tod))
+    tk.Label(gui, textvariable=date).grid(row=3, columnspan=4)
+    months.bind('<ButtonRelease-1>', lambda e: update_month(e, month, day, year, use_midday, date, days))
+    days.bind('<ButtonRelease-1>', lambda e: update_day(e, month, day, year, use_midday, date))
+    years.bind('<ButtonRelease-1>', lambda e: update_year(e, month, day, year, use_midday, date))
     ## Start button
-    start_button = tk.Button(gui, text='Start', command=lambda:daily3(args, month.get(), day.get(), year.get()))
-    start_button.grid(row=3)
+    start_button = tk.Button(gui, text='Start', command=lambda:daily3(args, month.get(), day.get(), year.get(), use_midday.get()))
+    start_button.grid(row=4, columnspan=4)
     gui.mainloop()
 
 if __name__ == "__main__":
