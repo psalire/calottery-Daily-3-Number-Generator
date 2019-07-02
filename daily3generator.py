@@ -160,42 +160,31 @@ def populate_days_listbox(month, days_listbox):
     for d in total_days:
         days_listbox.insert(tk.END, d)
 
+def usemidday_to_string(u):
+    if u.get() == True:
+        return 'Midday'
+    return 'Evening'
+
 def update_month(event, m, d, y, u, date, days):
     w = event.widget
     m.set(w.get(w.curselection()))
     populate_days_listbox(m.get(), days)
-    if u.get() == True:
-        tod = 'Midday'
-    else:
-        tod = 'Evening'
-    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
 
 def update_day(event, m, d, y, u, date):
     w = event.widget
     d.set(w.get(w.curselection()))
-    if u.get() == True:
-        tod = 'Midday'
-    else:
-        tod = 'Evening'
-    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
 
 def update_year(event, m, d, y, u, date):
     w = event.widget
     y.set(w.get(w.curselection()))
-    if u.get() == True:
-        tod = 'Midday'
-    else:
-        tod = 'Evening'
-    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
 
 def update_tod(m, d, y, u, date):
-    if u.get() == True:
-        tod = 'Midday'
-    else:
-        tod = 'Evening'
-    date.set('Using Date: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), tod))
+    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
 
-########### MAIN ###########
+###################### MAIN ######################
 def main():
     # Get args
     args = get_args()
@@ -249,12 +238,8 @@ def main():
         value=True, command=lambda: update_tod(month, day, year, use_midday, date)).grid(row=0, column=2)
     ## Display selected date
     date = tk.StringVar()
-    if use_midday.get() == True:
-        tod = 'Midday'
-    else:
-        tod = 'Evening'
-    date.set('Using Draw: {} {}, {} ({})'.format(month.get(), day.get(), year.get(), tod))
-    tk.Label(gui, textvariable=date).grid(row=3, columnspan=4)
+    date.set('Using Draw: {} {}, {} ({})'.format(month.get(), day.get(), year.get(), usemidday_to_string(use_midday)))
+    tk.Label(gui, textvariable=date, font='Arial 11 bold', width=30).grid(row=3, columnspan=4)
     months.bind('<ButtonRelease-1>', lambda e: update_month(e, month, day, year, use_midday, date, days))
     days.bind('<ButtonRelease-1>', lambda e: update_day(e, month, day, year, use_midday, date))
     years.bind('<ButtonRelease-1>', lambda e: update_year(e, month, day, year, use_midday, date))
