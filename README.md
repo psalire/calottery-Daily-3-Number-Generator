@@ -4,6 +4,8 @@ Parses calottery's .txt of Daily 3 results to generate playable Daily 3 numbers 
 
 ## Options
 
+(GUI WIP)
+
 ```
 > python3 daily3generator.py --help
 
