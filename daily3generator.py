@@ -5,6 +5,7 @@ import requests
 import sys
 import tkinter as tk
 from datetime import datetime, timedelta
+from gui import *
 
 LATEST_DRAW_DATE = None
 
@@ -20,19 +21,16 @@ def get_args():
     parser.add_argument('--uselocal', action='store_true', default=False, help='Use local daily3results.txt file from --savefile, instead of fetch. Default: False')
     return parser.parse_args()
 
-def get_daily3_file(save_file, use_local):
-    if use_local == False:
-        print('Fetching...')
-        page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
-        print('\033[A\033[K', end='')
-        # Fix line endings
-        content = str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
-    else:
-        content = open('daily3results.txt', 'r').read()
-    if save_file == True:
-        out_file = open('daily3results.txt', 'wb')
-        out_file.write(content.encode())
-        out_file.close()
+def fetch_daily3_file():
+    print('Fetching...')
+    page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
+    print('\033[A\033[K', end='')
+    with open('daily3results.txt', 'wb') as out_file:
+        # Write file with fixed line endings
+        out_file.write(str(page.content).replace(r'\r', '\r').replace(r'\n', '\n').encode())
+
+def open_daily3_file():
+    content = open('daily3results.txt', 'r').read()
     return content
 
 def get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw):
@@ -87,7 +85,6 @@ def print_playable_sets(hot_numbers, include_triples):
             i += 1
 
 def daily3(args, m, d, y, use_midday_draw):
-    print('{} {} {}'.format(m,d,y))
     # date_to_use = args.usedate[0]
     date_to_use = '{} {}, {}'.format(m, d, y)
     # if date_to_use != None:
@@ -108,7 +105,7 @@ def daily3(args, m, d, y, use_midday_draw):
     save_file = args.savefile
 
     # Get txt file
-    lotto_file = get_daily3_file(save_file, use_local)
+    lotto_file = open_daily3_file()
     lines = lotto_file.split('\n')[5:]
 
     # Get latest draw date
@@ -133,64 +130,15 @@ def daily3(args, m, d, y, use_midday_draw):
     )
     print_playable_sets(hot_numbers, include_triples)
 
-def create_gui_frame(gui, r, c, columnspan=None):
-    frame = tk.Frame(gui)
-    frame.grid_columnconfigure((0, 1), weight=1)
-    frame.grid_rowconfigure((0, 1), weight=1)
-    if columnspan != None:
-        frame.grid(row=r, column=c, columnspan=4)
-    else:
-        frame.grid(row=r, column=c)
-    return frame
-
-def create_gui_scrollbar(frame, reference):
-    scrollbar = tk.Scrollbar(frame)
-    scrollbar.configure(command=reference.yview, orient=tk.VERTICAL)
-    scrollbar.grid(row=1, column=1, sticky='NS')
-    return scrollbar
-
-def populate_days_listbox(month, days_listbox):
-    if month in ['Jan','Mar','May','Jul','Aug','Oct','Dec']:
-        total_days = range(1,32)
-    elif month != 'Feb':
-        total_days = range(1,31)
-    else:
-        total_days = range(1,30)
-    days_listbox.delete(0, tk.END)
-    for d in total_days:
-        days_listbox.insert(tk.END, d)
-
-def usemidday_to_string(u):
-    if u.get() == True:
-        return 'Midday'
-    return 'Evening'
-
-def update_month(event, m, d, y, u, date, days):
-    w = event.widget
-    m.set(w.get(w.curselection()))
-    populate_days_listbox(m.get(), days)
-    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
-
-def update_day(event, m, d, y, u, date):
-    w = event.widget
-    d.set(w.get(w.curselection()))
-    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
-
-def update_year(event, m, d, y, u, date):
-    w = event.widget
-    y.set(w.get(w.curselection()))
-    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
-
-def update_tod(m, d, y, u, date):
-    date.set('Using Draw: {} {}, {} ({})'.format(m.get(), d.get(), y.get(), usemidday_to_string(u)))
-
 ###################### MAIN ######################
 def main():
     # Get args
     args = get_args()
-
+    # Fetch latest draw file
+    fetch_daily3_file()
     # Create GUI
     gui = tk.Tk()
+    ## Configure grids
     gui.grid_columnconfigure((0, 1, 2, 3), weight=1)
     gui.grid_rowconfigure((0, 1, 2, 3), weight=1)
     gui.title('CA Daily 3 Generator')
