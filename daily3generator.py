@@ -24,10 +24,12 @@ def get_args():
 def fetch_daily3_file():
     print('Fetching...')
     page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=daily-3&Order=No')
-    print('\033[A\033[K', end='')
+    print('Fetched.')
+    content = str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
     with open('daily3results.txt', 'wb') as out_file:
         # Write file with fixed line endings
-        out_file.write(str(page.content).replace(r'\r', '\r').replace(r'\n', '\n').encode())
+        out_file.write(content.encode())
+    return content
 
 def open_daily3_file():
     content = open('daily3results.txt', 'r').read()
@@ -44,8 +46,8 @@ def get_line_num_by_date(date_to_use, lines, lookback_size, use_midday_draw):
             return None, None
         date_line_num = diff.days * 2
     if date_line_num + lookback_size > len(lines):
-        print('Error: Date ({}) + lookback_size ({}) is out of range. Exiting...'.format(date_to_use.strftime('%b %d, %Y'), lookback_size))
-        sys.exit()
+        print('Error: Date ({}) + lookback_size ({}) is out of range.'.format(date_to_use.strftime('%b %d, %Y'), lookback_size))
+        return
     if use_midday_draw == True and lines[date_line_num][15:27] == lines[date_line_num+1][15:27]:
         date_line_num += 1
     elif use_midday_draw == False and date_line_num != 0 and lines[date_line_num][15:27] == lines[date_line_num-1][15:27]:
@@ -84,7 +86,7 @@ def print_playable_sets(hot_numbers, include_triples):
             print('{:>2}. {}'.format(i, ''.join(set)))
             i += 1
 
-def daily3(args, m, d, y, use_midday_draw):
+def daily3(args, m, d, y, use_midday_draw, lookback_size):
     # date_to_use = args.usedate[0]
     date_to_use = '{} {}, {}'.format(m, d, y)
     # if date_to_use != None:
@@ -93,11 +95,11 @@ def daily3(args, m, d, y, use_midday_draw):
     except ValueError:
         print('Error: Invalid date')
         return
-    lookback_size = args.lookback[0]
+    # lookback_size = args.lookback[0]
     tot_hotnumbers = args.tothotnumbers[0]
     if tot_hotnumbers > 10:
         print('Error: must be 0 < tot_hotnumbers <= 10')
-        sys.exit()
+        return
     use_local = args.uselocal
     show_histogram = args.showhistogram
     # use_midday_draw = args.middaydraw
@@ -135,28 +137,31 @@ def main():
     # Get args
     args = get_args()
     # Fetch latest draw file
-    fetch_daily3_file()
+    lotto_file = fetch_daily3_file().split('\n')[5:]
     # Create GUI
     gui = tk.Tk()
     ## Configure grids
-    gui.grid_columnconfigure((0, 1, 2, 3), weight=1)
-    gui.grid_rowconfigure((0, 1, 2, 3), weight=1)
+    gui.grid_columnconfigure((0,1,2,3), weight=1)
+    gui.grid_rowconfigure((0,1,2,3,4), weight=1)
     gui.title('CA Daily 3 Generator')
-    ## StringVars for date to use
+    ## Argument vars
     month = tk.StringVar()
     day = tk.StringVar()
     year = tk.StringVar()
     use_midday = tk.BooleanVar()
-    ## Initialize to today's date
+    lookback_size = tk.IntVar()
+    ## Initialize argument vars
     month.set(datetime.today().strftime('%b'))
     day.set(datetime.today().strftime('%d'))
     year.set(datetime.today().strftime('%Y'))
     use_midday.set(False)
-    ### Frames for date selection
+    lookback_size.set(10)
+    ### Create frames
     month_frame = create_gui_frame(gui, 0, 0)
     day_frame = create_gui_frame(gui, 0, 1)
     year_frame = create_gui_frame(gui, 0, 2)
     tod_frame = create_gui_frame(gui, 2, 0, columnspan=4)
+    lb_frame = create_gui_frame(gui, 3, 0, columnspan=4)
     ### Listboxes for date selection
     months = tk.Listbox(month_frame, width=5)
     days = tk.Listbox(day_frame, width=5)
@@ -184,16 +189,19 @@ def main():
         value=False, command=lambda: update_tod(month, day, year, use_midday, date)).grid(row=0, column=1)
     tk.Radiobutton(tod_frame, text='Midday', variable=use_midday,
         value=True, command=lambda: update_tod(month, day, year, use_midday, date)).grid(row=0, column=2)
+    ### Spinbox for lookback size
+    tk.Label(lb_frame, text='Lookback Size:').grid(row=0, column=0)
+    tk.Spinbox(lb_frame, from_=1, to_=len(lotto_file), textvariable=lookback_size, width=10).grid(row=0, column=1)
     ## Display selected date
     date = tk.StringVar()
     date.set('Using Draw: {} {}, {} ({})'.format(month.get(), day.get(), year.get(), usemidday_to_string(use_midday)))
-    tk.Label(gui, textvariable=date, font='Arial 11 bold', width=30).grid(row=3, columnspan=4)
+    tk.Label(gui, textvariable=date, font='Arial 11 bold', width=30).grid(row=4, columnspan=4)
     months.bind('<ButtonRelease-1>', lambda e: update_month(e, month, day, year, use_midday, date, days))
     days.bind('<ButtonRelease-1>', lambda e: update_day(e, month, day, year, use_midday, date))
     years.bind('<ButtonRelease-1>', lambda e: update_year(e, month, day, year, use_midday, date))
     ## Start button
-    start_button = tk.Button(gui, text='Start', command=lambda:daily3(args, month.get(), day.get(), year.get(), use_midday.get()))
-    start_button.grid(row=4, columnspan=4)
+    start_button = tk.Button(gui, text='Start', command=lambda:daily3(args, month.get(), day.get(), year.get(), use_midday.get(), lookback_size.get()))
+    start_button.grid(row=5, columnspan=4)
     gui.mainloop()
 
 if __name__ == "__main__":
