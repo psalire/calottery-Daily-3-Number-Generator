@@ -5,9 +5,9 @@ def create_gui_frame(gui, r, c, columnspan=None):
     frame.grid_columnconfigure((0, 1), weight=1)
     frame.grid_rowconfigure((0, 1), weight=1)
     if columnspan != None:
-        frame.grid(row=r, column=c, columnspan=4)
+        frame.grid(row=r, column=c, sticky= 'N', columnspan=columnspan)
     else:
-        frame.grid(row=r, column=c)
+        frame.grid(row=r, column=c, sticky= 'N')
     return frame
 
 def create_gui_scrollbar(frame, reference):
