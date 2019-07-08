@@ -1,19 +1,17 @@
 import tkinter as tk
 
-def create_gui_frame(gui, r, c, columnspan=None):
+def create_gui_frame(gui, r, c, columnspan=1, rowspan=1):
     frame = tk.Frame(gui)
     frame.grid_columnconfigure((0, 1), weight=1)
     frame.grid_rowconfigure((0, 1), weight=1)
-    if columnspan != None:
-        frame.grid(row=r, column=c, sticky= 'N', columnspan=columnspan)
-    else:
-        frame.grid(row=r, column=c, sticky= 'N')
+    frame.grid(row=r, column=c, sticky= 'N', columnspan=columnspan, rowspan=rowspan)
     return frame
 
-def create_gui_scrollbar(frame, reference):
+def create_gui_scrollbar(frame, reference, row=1, column=1):
     scrollbar = tk.Scrollbar(frame)
-    scrollbar.configure(command=reference.yview, orient=tk.VERTICAL)
-    scrollbar.grid(row=1, column=1, sticky='NS')
+    scrollbar.configure(command=reference.yview)
+    scrollbar.grid(row=row, column=column, sticky='NS')
+    reference.config(yscrollcommand=scrollbar.set)
     return scrollbar
 
 def populate_days_listbox(month, days_listbox):
