@@ -2,6 +2,10 @@
 
 Parses calottery's .txt of Daily 3 results to generate playable Daily 3 numbers using the "hot number" strategy, wherein the least played numbers over a certain amount of draws are considered playable.
 
+## Dependencies
+
+Python3, tkinter, requests
+
 ## Options
 
 ```
