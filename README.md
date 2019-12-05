@@ -1,5 +1,7 @@
 # calottery Daily 3 Number Generator
 
+![Example](imgs/example.png "Output")
+
 NOTE: calottery.com no longer provides the .txt file containing historical data that this program uses. If you have an old copy of one, you may use ```--use-local [file]```.
 
 TODO: rewrite program to use JSON from REST API (explained below)
@@ -37,8 +39,6 @@ For example,
 
 and so on
 
-So, it is possible with a multiple API calls and combination of returned JSONs to get all historical data as this program requires.
-
 ----
 
 Parses calottery's .txt of Daily 3 results to generate playable Daily 3 numbers using the "hot number" strategy, wherein the least played numbers over a certain amount of draws are considered playable.
@@ -60,6 +60,3 @@ optional arguments:
                        calottery.com
 
 ```
-
-## Example output
-![Example Output](imgs/example.png "Output")
