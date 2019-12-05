@@ -1,6 +1,6 @@
 # calottery Daily 3 Number Generator
 
-NOTE: calottery.com no longer provides the .txt file containing historical data. If you have an old copy of one, you may use ```--use-local [file]```.
+NOTE: calottery.com no longer provides the .txt file containing historical data that this program uses. If you have an old copy of one, you may use ```--use-local [file]```.
 
 TODO: rewrite program to use JSON from REST API (explained below)
 
