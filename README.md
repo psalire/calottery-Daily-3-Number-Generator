@@ -8,7 +8,7 @@ NOTE: calottery.com no longer provides the .txt file containing historical data 
 
 TODO: rewrite program to use JSON from REST API (explained below)
 
-Poking around the site, I found that historical data can be fetched with a REST API that returns a JSON:
+Historical data on calottery.com is now fetched with a REST API that returns a JSON, but is limited per API call:
 
 ```
 GET /api/DrawGameApi/DrawGamePastDrawResults/9/1/20 HTTP/1.1
@@ -27,21 +27,17 @@ Explanation:
 
 ```Page#/Total``` -
 
-```Total``` indicates how many draws to return. It can range from 1 to 50.
-
-```Page#``` indicates which index of ```Total``` to return.
+* ```Total``` indicates how many draws to return. It can range from 1 to 50.
+* ```Page#``` indicates which index of ```Total``` to return.
 
 For example,
 
-```1/20``` returns the 20 most recent draws, i.e. draws 1-20
+* ```1/20``` returns the 20 most recent draws, i.e. draws 1-20
+* ```2/20``` returns draws 21-40
+* ```3/20``` returns draws 41-60
+* and so on
 
-```2/20``` returns draws 21-40
-
-```3/20``` returns draws 41-60
-
-and so on
-
-----
+## About
 
 Parses calottery's .txt of Daily 3 results to generate playable Daily 3 numbers using the "hot number" strategy, wherein the least played numbers over a certain amount of draws are considered playable.
 
